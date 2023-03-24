@@ -367,3 +367,117 @@ Scenario: supports directives on inline fragments (https://github.com/apollograp
   """
   {"kind":"QueryPlan","node":{"kind":"Fetch","serviceName":"product","variableUsages":[],"operationKind": "query","operation":"query GetVehicle__product__0{vehicle(id:\"rav4\"){__typename ...on Car@fragmentDirective{price thing{__typename ...on Ikea{asile}}}...on Van{price@stream}}}","operationName":"GetVehicle__product__0"}}
   """
+
+Scenario: Always fetches typename for interfaces
+  Given query
+  """
+  query GetVehicle {
+    vehicle(id:"rav4") {
+      ... on Car {
+        id
+        price
+      }
+    }
+  }
+  """
+  Then query plan
+  """
+  {
+  "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "product",
+      "variableUsages": [],
+      "operationKind": "query",
+      "operation": "query GetVehicle__product__0{vehicle(id:\"rav4\"){__typename ...on Car{id price}}}",
+      "operationName": "GetVehicle__product__0"
+    }
+  }
+  """
+
+Scenario: supports typename queries on fragments
+  Given query
+  """
+  query GetVehicle {
+    vehicle(id:"rav4") {
+      ... on Car {
+        __typename
+        id
+        price
+      }
+    }
+  }
+  """
+  Then query plan
+  """
+  {
+  "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "product",
+      "variableUsages": [],
+      "operationKind": "query",
+      "operation": "query GetVehicle__product__0{vehicle(id:\"rav4\"){__typename ...on Car{__typename id price}}}",
+      "operationName": "GetVehicle__product__0"
+    }
+  }
+  """
+
+Scenario: supports typename queries on fragments with duplicate key fetches if fetching typename
+  Given query
+  """
+  query GetVehicle {
+    vehicle(id:"rav4") {
+      id
+      ... on Car {
+        __typename
+        id
+        price
+      }
+    }
+  }
+  """
+  Then query plan
+  """
+  {
+  "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "product",
+      "variableUsages": [],
+      "operationKind": "query",
+      "operation": "query GetVehicle__product__0{vehicle(id:\"rav4\"){__typename id ...on Car{__typename id price}}}",
+      "operationName": "GetVehicle__product__0"
+    }
+  }
+  """
+
+
+Scenario: supports typename queries on fragments with duplicate key fetches if not fetching typename for object
+  Given query
+  """
+  query GetVehicle {
+    vehicle(id:"rav4") {
+      id
+      ... on Car {
+        __typename
+        id
+        price
+      }
+    }
+  }
+  """
+  Then query plan
+  """
+  {
+  "kind": "QueryPlan",
+    "node": {
+      "kind": "Fetch",
+      "serviceName": "product",
+      "variableUsages": [],
+      "operationKind": "query",
+      "operation": "query GetVehicle__product__0{vehicle(id:\"rav4\"){__typename id ...on Car{__typename id price}}}",
+      "operationName": "GetVehicle__product__0"
+    }
+  }
+  """
